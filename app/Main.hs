@@ -8,20 +8,37 @@ import Control.Monad
 import Parser
 import Text.Printf
 import Text.Pretty.Simple (pPrint)
-
+import System.Exit
 main :: IO ()
 main = do 
-    p : args <- getArgs
+    ars <- getArgs
+    when (null ars) $ do
+        putStrLn "Usage: gql <graphfile>"
+        exitWith $ ExitFailure 1
+    let p : args = ars
     str <- readFile p
-    let index_table = getAllTable str
+    let graph = case parseGQL str of
+                    Left er -> error $ show er
+                    Right g -> g
+    let index_table = getAllTable graph
     putStrLn "#ifndef GQL_ENCODE_H"
     putStrLn "#define GQL_ENCODE_H"
-    printf "uint32_t indexTable[%d] = " (length index_table) 
-    printfIndexTable index_table
-    putStr ";"
+    putStrLn "#include <stdint.h>"
     putStrLn ""
-    let paths = str2Paths str
-    printf "uint32_t pathCodes[%d] = " (length paths)
+    printf "#define EDGE_INDEX_LEN %d\n" (numOfEdges (path graph))
+    printf "uint32_t edgeIndexArr[EDGE_INDEX_LEN] = "
+    printEdges (getEdges (path graph))
+    putStr ";"
+    putStrLn "\n"
+    printf "#define TABLE_INDEX_LEN %d\n" (length index_table)
+    printf "uint32_t tableIndexArr[TABLE_INDEX_LEN] = "
+    printIndexTable index_table
+    putStr ";"
+    putStrLn "\n"
+    let paths = str2Paths graph
+    printf "#define PATH_CODES_LEN %d" (length paths)
+    putStrLn ""
+    printf "uint32_t pathCodes[PATH_CODES_LEN] = "
     let ws = map (encode index_table) paths
     printEncoding ws
     putStr ";"
