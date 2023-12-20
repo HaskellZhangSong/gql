@@ -43,14 +43,17 @@ gql : create path p_id '(' match p ')'
     { GQL (P $3) $6 }
 
 p :: { Path }
-p : '(' null ')' { Null }
-  | null { Null }
-  | '(' ident ')' { Node (T $2) }
-  | ident { Node (T $1) }
-  | '(' ident ')' '-' '[' edges ']' '->' '(' p ')' 
+p : 
+    '(' ident ')' '-' '[' edges ']' '->' p
+            { Path (T $2) $6 $9 }
+  | '(' ident ')' '-' '[' edges ']' '->' '(' p ')'
             { Path (T $2) $6 $10 }
-  | p ',' p { PathAnd $1 $3}
-  | p '|' p { PathOr  $1 $3}
+  | p ',' p  { PathAnd $1 $3 }
+  | p '|' p  { PathOr  $1 $3 }
+  | ident { Node (T $1) }
+  | '(' null ')' { Null }
+  | '(' ident ')' { Node (T $2) }
+
 
 edges :: { Edges }
 edges : ident { [E $1] }

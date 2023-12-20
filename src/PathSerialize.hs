@@ -19,26 +19,22 @@ getPaths (Path t es p)   = sort [t : ps | ps <- getPaths p]
 example1 :: String
 example1 = unsafePerformIO $ readFile "./example/example2.gql"
 
-printIndexTable :: [(Table, Int)] -> IO ()
-printIndexTable [] = putStr "{}"
-printIndexTable xs = do 
-                    putStr "{" 
-                    go tables
+printIndexTable :: [(Table, Int)] -> String
+printIndexTable [] = "{}"
+printIndexTable xs = "{" ++ go tables
                     where 
                         tables = map fst xs
-                        go [] = putStr "}"
-                        go [(T x)] = putStr (drop 1 x) >> putStr "}"
-                        go (T t:tx) = putStr (drop 1 t) >> putStr ", " >> go tx
+                        go [] = "}"
+                        go [(T x)] = (drop 1 x) ++ "}"
+                        go (T t:tx) = (drop 1 t) ++  ", " ++ go tx
 
-printEdges :: Edges -> IO ()
-printEdges [] = putStr "{}"
-printEdges es = do 
-            putStr "{"
-            go (sort es)
+printEdges :: Edges -> String
+printEdges [] = "{}"
+printEdges es = "{" ++ go (sort es)
                     where 
-                        go [] = putStr "}"
-                        go [(E x)] = putStr (drop 1 x) >> putStr "}"
-                        go (E t:tx) = putStr (drop 1 t) >> putStr ", " >> go tx
+                        go [] = "}"
+                        go [(E x)] = (drop 1 x) ++ "}"
+                        go (E t:tx) = (drop 1 t) ++ ", " ++ go tx
 
 str2Paths :: GQL -> [[Table]]
 str2Paths gq =  nub $ getPaths (path gq)
@@ -51,13 +47,11 @@ encode t [] = 0
 encode t (p:ps) = case lookup p t of
                     Just i -> (1 `shiftL` i) .|. encode t ps
 
-printEncoding :: [Word32] -> IO () 
-printEncoding [] = putStr "{}"
-printEncoding xs = do 
-                putStrLn "{"
-                go xs
-                where go [] = putStr "}"
-                      go [x] = printf "    0b%b" x >> putStr "}"
-                      go (w:ws) = printf "    0b%b" w >> putStr ",\n" >> go ws
+printEncoding :: [Word32] -> String
+printEncoding [] = "{}"
+printEncoding xs = "{\n" ++ go xs
+                where go [] = "}"
+                      go [x] = printf "    0b%b" x ++ "}"
+                      go (w:ws) = printf "    0b%b" w ++ ",\n" ++ go ws
 
 

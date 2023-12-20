@@ -1,0 +1,4 @@
+CREATE PATH P0 (
+    MATCH
+    (:T1)-[:E1]->(:T2)-[:E4]->(:T4)
+)
