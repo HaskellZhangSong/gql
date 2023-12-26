@@ -9,10 +9,15 @@ import Parser
 import Text.Printf
 import Text.Pretty.Simple (pPrint)
 import System.Exit
+import Prettyprinter
+import Data.Function
+
 
 hfile :: GQL -> String
-hfile graph = let paths = str2Paths graph
+hfile graph = let paths = gql2Paths graph
                   index_table = getAllTable graph
+                  p = path graph
+                  tis = pathToTableInfo p
                   ws = map (encode index_table) paths
                 in unlines [
     "#ifndef GQL_ENCODE_H",
@@ -24,21 +29,35 @@ hfile graph = let paths = str2Paths graph
     "extern uint32_t tableIndexArr[TABLE_INDEX_LEN] ;",
     printf "#define PATH_CODES_LEN %d" (length paths) , 
     "extern uint32_t pathCodes[PATH_CODES_LEN];",
+    idHashPair,
+    tableInfo,
+
+    "extern uint32_t g_table_info_size;",
+    printf "extern TableInfo g_table_info[%d];" (length tis),
     "#endif"
     ]
 
 cfile :: GQL -> String
-cfile graph = let paths = str2Paths graph
+cfile graph = let paths = gql2Paths graph
+                  p = path graph
+                  tis = pathToTableInfo p
                   index_table = getAllTable graph
                   ws = map (encode index_table) paths
                 in unlines [
     "#include <stdint.h>",
+    "#include \"path_config.h\"",
     printf "#define EDGE_INDEX_LEN %d" (numOfEdges (path graph)),
     "uint32_t edgeIndexArr[EDGE_INDEX_LEN] = " ++ printEdges (getEdges (path graph)) ++ ";",
     printf "#define TABLE_INDEX_LEN %d" (length index_table),
     "uint32_t tableIndexArr[TABLE_INDEX_LEN] = " ++ printIndexTable index_table ++ ";",
     printf "#define PATH_CODES_LEN %d" (length paths), 
-    printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";"
+    printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";",
+    "\n",
+    printf ("uint32_t g_table_info_size = %d;") (length tis),
+    printf ("TableInfo g_table_info[%d] = \n" ++ 
+            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") (length tis),
+    "\n",
+    let pss = (map.map) (unT) paths in show  $ concatWith (surround line) (map (\x -> pretty "//" <+> pretty x) pss)
     ]
 
 main :: IO ()
@@ -53,12 +72,7 @@ main = do
                     Left er -> error $ show er
                     Right g -> g
     putStrLn "// header file"
-    putStr $ hfile graph
-    putStrLn "// C file"
-    putStr $ cfile graph
-    let index_table = getAllTable graph
-    let paths = str2Paths graph
-    forM_ ((map.map) unT paths) $ \p -> do
-        putStr "// "
-        print p
+    writeFile "./path_config.h" (hfile graph)
+    writeFile "./path_config.c" (cfile graph)
+    let paths = gql2Paths graph
     when (length args > 0) $ pPrint $ parseGQL str

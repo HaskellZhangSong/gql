@@ -1,6 +1,18 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE QuasiQuotes #-}
+
+
 module AST where
 import Data.Char
 import Data.Either (fromRight)
+import Foreign.C.Types
+import Foreign.Ptr
+import Foreign.C.String
+import System.IO.Unsafe
+import Text.RawString.QQ
+import Prettyprinter
+import Data.Function
+import Data.List
 
 data Table = T_Null
            | T { unT :: String }
@@ -26,6 +38,22 @@ instance Ord EdgeId where
                              i2 = read (dropWhile isAlpha e2) :: Int
                          in i1 <= i2
 
+idHashPair :: String
+idHashPair = [r|
+typedef struct {
+    uint32_t id;
+    uint32_t hash;
+} IdHashPair;
+|]
+
+tableInfo :: String
+tableInfo = [r|
+typedef struct {
+    IdHashPair tableIdHashPair;
+    uin32_t edgeCount;
+    IdHashPair edgeIdHashPairs[8];
+} TableInfo;
+|]
 
 newtype PathId = P String
     deriving (Eq, Show)
@@ -35,12 +63,59 @@ type Edges = [EdgeId]
 data GQL = GQL {pathId :: PathId,
                 path :: Path}
         deriving (Eq, Show)
+
 data Path = Null
           | Node Table
           | PathOr Path Path
           | PathAnd Path Path
           | Path Table Edges Path
         deriving (Eq, Show)
+
+foreign import ccall "XXH32" xxh32 :: CString -> CSize -> CUInt -> IO CUInt
+
+hash32 str = unsafePerformIO $ withCString str (\x -> xxh32 x (genericLength str) 10)
+
+tableEdges :: Path -> [(Table, Edges)]
+tableEdges Null = []
+tableEdges (Node _) = []
+tableEdges (PathOr p1 p2) = tableEdges p1 ++ tableEdges p2
+tableEdges (PathAnd p1 p2) = tableEdges p1 ++ tableEdges p2
+tableEdges (Path t es p) = (t,es) : tableEdges p
+
+data IdHashPair = IdHashPair { 
+                    id :: CUInt, 
+                    hash :: CUInt 
+                }
+
+instance Pretty IdHashPair where
+    pretty (IdHashPair a b) = braces (unsafeViaShow a <> 
+                                      pretty ", " <>  
+                                      unsafeViaShow b)
+
+data TableInfo = TableInfo {
+                    table     :: IdHashPair, 
+                    edgeCount :: Int,
+                    edges     :: [IdHashPair]
+                }
+
+instance Pretty TableInfo where
+    pretty (TableInfo t ec es) = braces
+                                 (pretty t <>
+                                  pretty ", " <>
+                                  unsafeViaShow ec <>
+                                  pretty ", " <>
+                                  line <> (indent 4 $
+                                    (braces (map pretty es & concatWith (surround (pretty ", " <> line))))))
+
+tableInfos :: (Table, Edges) -> TableInfo
+tableInfos (T t, es) = let es' = es ++ replicate (8 - length es) (E "E0")
+                        in TableInfo (IdHashPair (read (drop 1 t) :: CUInt) 
+                                          (hash32 t))
+                              (length es)
+                              (map (\(E x) -> (IdHashPair (read (drop 1 x) :: CUInt) 
+                                          (hash32 x))) es')
+
+pathToTableInfo = map tableInfos . tableEdges
 
 numOfEdges :: Path -> Int
 numOfEdges Null = 0

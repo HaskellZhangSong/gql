@@ -36,8 +36,8 @@ printEdges es = "{" ++ go (sort es)
                         go [(E x)] = (drop 1 x) ++ "}"
                         go (E t:tx) = (drop 1 t) ++ ", " ++ go tx
 
-str2Paths :: GQL -> [[Table]]
-str2Paths gq =  nub $ getPaths (path gq)
+gql2Paths :: GQL -> [[Table]]
+gql2Paths gq =  nub $ getPaths $ path gq
 
 getAllTable :: GQL -> [(Table, Int)]
 getAllTable gq =  zip (nub $ concat $ getPaths (path gq)) [0..]

@@ -26,6 +26,8 @@ dependencies:
 - containers
 - parsec
 - pretty-simple
+- raw-strings-qq
+- prettyprinter
 ghc-options:
 - -Wall
 - -Wcompat
@@ -44,7 +46,7 @@ library:
   source-dirs: src
   extra-source-files:
   - Lexer.x
-
+  - Parser.y
 executables:
   gql-exe:
     main:                Main.hs
@@ -55,7 +57,10 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - gql
-
+    include-dirs:
+    - cbit/xxHash
+    c-sources:
+    - cbit/xxHash/*.c
 tests:
   gql-test:
     main:                Spec.hs
