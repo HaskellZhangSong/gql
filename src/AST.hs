@@ -111,12 +111,11 @@ instance Pretty TableInfo where
                                     (braces (map pretty es & concatWith (surround (pretty ", " <> line))))))
 
 tableInfos :: (Table, Edges) -> TableInfo
-tableInfos (T t, es) = let es' = es ++ replicate (8 - length es) (E "E0")
-                        in TableInfo (IdHashPair (read (drop 1 t) :: CUInt) 
+tableInfos (T t, es) = TableInfo (IdHashPair (read (drop 1 t) :: CUInt) 
                                           (hash32 t))
                               (length es)
-                              (map (\(E x) -> (IdHashPair (read (drop 1 x) :: CUInt) 
-                                          (hash32 x))) es')
+                              (map (\(E x) -> (IdHashPair (read (drop 1 x) :: CUInt)
+                                          (hash32 x))) es)
 
 pathToTableInfo :: Path -> [TableInfo]
 pathToTableInfo = map tableInfos . M.toList . M.fromListWith (++) . tableEdges
