@@ -70,7 +70,7 @@ table_info_cfile graph = let paths = gql2Paths graph
                              tis = pathToTableInfo p
                          in unlines [
     "#include \"vertex_edges_info.h\"",
-    printf ("TableInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE] = \n" ++ 
+    printf ("VertexEdgesInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE] = \n" ++ 
             show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") 
     ]
 
