@@ -41,6 +41,9 @@ table_info_hfile graph = let p = path graph
      "#ifndef VERTEX_EDGES_INFO_H",
      "#define VERTEX_EDGES_INFO_H",
      "#include <stdint.h>",
+     printf "#define EDGE_IDS_SIZE %d" (numOfEdges p),
+     "extern uint32_t g_edge_ids[EDGE_IDS_SIZE];",
+
      idHashPair,
      vertexEdgesInfo,
      printf "#define VERTEX_EDGES_INFO_SIZE %d" (length tis),
@@ -56,11 +59,8 @@ cfile graph = let paths = gql2Paths graph
                 in unlines [
     "#include <stdint.h>",
     "#include \"path_config.h\"",
-    printf "#define EDGE_INDEX_LEN %d" (numOfEdges (path graph)),
     "uint32_t edgeIndexArr[EDGE_INDEX_LEN] = " ++ printEdges (getEdges (path graph)) ++ ";",
-    printf "#define TABLE_INDEX_LEN %d" (length index_table),
     "uint32_t tableIndexArr[TABLE_INDEX_LEN] = " ++ printIndexTable index_table ++ ";",
-    printf "#define PATH_CODES_LEN %d" (length paths), 
     printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";"
     ]
 
@@ -70,6 +70,7 @@ table_info_cfile graph = let paths = gql2Paths graph
                              tis = pathToTableInfo p
                          in unlines [
     "#include \"vertex_edges_info.h\"",
+    "uint32_t g_edge_ids[EDGE_IDS_SIZE] = " ++ printEdges (getEdges p) ++ ";",
     printf ("VertexEdgesInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE] = \n" ++ 
             show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") 
     ]
