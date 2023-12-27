@@ -50,10 +50,11 @@ typedef struct {
 
 tableInfo :: String
 tableInfo = [r|
+#define MAX_EDGE_SIZE 16
 typedef struct {
     IdHashPair tableIdHashPair;
     uin32_t edgeCount;
-    IdHashPair edgeIdHashPairs[8];
+    IdHashPair edgeIdHashPairs[MAX_EDGE_SIZE];
 } TableInfo;
 |]
 
