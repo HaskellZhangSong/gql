@@ -41,10 +41,9 @@ table_info_hfile graph = let p = path graph
      "#define VERTEX_EDGES_INFO_H",
      "#include <stdint.h>",
      printf "#define EDGE_IDS_SIZE %d" (numOfEdges p),
-     "extern IdHashPair g_edge_id_hash_pairs[EDGE_IDS_SIZE];",
-
      idHashPair,
      vertexEdgesInfo,
+     "extern IdHashPair g_edge_id_hash_pairs[EDGE_IDS_SIZE];",
      printf "#define VERTEX_EDGES_INFO_SIZE %d" (length tis),
      printf "extern VertexEdgesInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE];",
      "#endif"]
