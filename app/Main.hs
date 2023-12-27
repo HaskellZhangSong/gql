@@ -43,8 +43,8 @@ table_info_hfile graph = let p = path graph
      "#include <stdint.h>",
      idHashPair,
      tableInfo,
-     printf "#define TABLE_INFO_SIZE %d" (length tis),
-     printf "extern TableInfo g_table_info[TABLE_INFO_SIZE];",
+     printf "#define VERTEX_EDGES_INFO_SIZE %d" (length tis),
+     printf "extern VertexEdgesInfo g_table_info[VERTEX_EDGES_INFO_SIZE];",
      "#endif"]
 
 cfile :: GQL -> String
@@ -69,8 +69,8 @@ table_info_cfile graph = let paths = gql2Paths graph
                              p = path graph
                              tis = pathToTableInfo p
                          in unlines [
-    "#include \"table_info.h\"",
-    printf ("TableInfo g_table_info[TABLE_INFO_SIZE] = \n" ++ 
+    "#include \"vertex_edges_info.h\"",
+    printf ("TableInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE] = \n" ++ 
             show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") 
     ]
 
@@ -89,7 +89,7 @@ main = do
                     Right g -> g
     writeFile "./path_config.h" (hfile graph)
     writeFile "./path_config.c" (cfile graph)
-    writeFile "./table_info.h" (table_info_hfile graph)
-    writeFile "./table_info.c" (table_info_cfile graph)
+    writeFile "./vertex_edges_info.h" (table_info_hfile graph)
+    writeFile "./vertex_edges_info.c" (table_info_cfile graph)
     let paths = gql2Paths graph
     when (length args > 0) $ pPrint $ parseGQL str

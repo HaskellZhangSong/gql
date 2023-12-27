@@ -55,7 +55,7 @@ typedef struct {
     IdHashPair tableIdHashPair;
     uint32_t edgeCount;
     IdHashPair edgeIdHashPairs[MAX_EDGE_SIZE];
-} TableInfo;
+} VertexEdgesInfo;
 |]
 
 newtype PathId = P String
