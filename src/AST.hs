@@ -48,8 +48,8 @@ typedef struct {
 } IdHashPair;
 |]
 
-tableInfo :: String
-tableInfo = [r|
+vertexEdgesInfo :: String
+vertexEdgesInfo = [r|
 #define MAX_EDGE_SIZE 16
 typedef struct {
     IdHashPair tableIdHashPair;

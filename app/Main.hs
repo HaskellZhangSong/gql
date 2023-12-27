@@ -38,13 +38,13 @@ table_info_hfile graph = let p = path graph
                              tis = pathToTableInfo p
                         in unlines
     ["#pragma once",
-     "#ifndef TABLE_INFO_H",
-     "#define TABLE_INFO_H",
+     "#ifndef VERTEX_EDGES_INFO_H",
+     "#define VERTEX_EDGES_INFO_H",
      "#include <stdint.h>",
      idHashPair,
-     tableInfo,
+     vertexEdgesInfo,
      printf "#define VERTEX_EDGES_INFO_SIZE %d" (length tis),
-     printf "extern VertexEdgesInfo g_table_info[VERTEX_EDGES_INFO_SIZE];",
+     printf "extern VertexEdgesInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE];",
      "#endif"]
 
 cfile :: GQL -> String
