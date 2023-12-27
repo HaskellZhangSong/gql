@@ -54,7 +54,7 @@ vertexEdgesInfo = [r|
 typedef struct {
     IdHashPair tableIdHashPair;
     uint32_t edgeCount;
-    IdHashPair edgeIdHashPairs[MAX_EDGE_SIZE];
+    uint32_t edgeIds[MAX_EDGE_SIZE];
 } VertexEdgesInfo;
 |]
 
@@ -98,7 +98,7 @@ instance Pretty IdHashPair where
 data TableInfo = TableInfo {
                     table     :: IdHashPair, 
                     edgeCount :: Int,
-                    edges     :: [IdHashPair]
+                    edges     :: [CUInt]
                 }
 
 instance Pretty TableInfo where
@@ -108,14 +108,13 @@ instance Pretty TableInfo where
                                   unsafeViaShow ec <>
                                   pretty ", " <>
                                   line <> (indent 4 $
-                                    (braces (map pretty es & concatWith (surround (pretty ", " <> line))))))
+                                    (braces (map unsafeViaShow es & concatWith (surround (pretty ","))))))
 
 tableInfos :: (Table, Edges) -> TableInfo
 tableInfos (T t, es) = TableInfo (IdHashPair (read (drop 1 t) :: CUInt) 
                                           (hash32 t))
                               (length es)
-                              (map (\(E x) -> (IdHashPair (read (drop 1 x) :: CUInt)
-                                          (hash32 x))) es)
+                              (map (\(E x) -> (read (drop 1 x) :: CUInt)) es)
 
 pathToTableInfo :: Path -> [TableInfo]
 pathToTableInfo = map tableInfos . M.toList . M.fromListWith (++) . tableEdges

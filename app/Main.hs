@@ -12,7 +12,6 @@ import System.Exit
 import Prettyprinter
 import Data.Function
 
-
 hfile :: GQL -> String
 hfile graph = let paths = gql2Paths graph
                   index_table = getAllTable graph
@@ -42,7 +41,7 @@ table_info_hfile graph = let p = path graph
      "#define VERTEX_EDGES_INFO_H",
      "#include <stdint.h>",
      printf "#define EDGE_IDS_SIZE %d" (numOfEdges p),
-     "extern uint32_t g_edge_ids[EDGE_IDS_SIZE];",
+     "extern IdHashPair g_edge_id_hash_pairs[EDGE_IDS_SIZE];",
 
      idHashPair,
      vertexEdgesInfo,
@@ -70,9 +69,15 @@ table_info_cfile graph = let paths = gql2Paths graph
                              tis = pathToTableInfo p
                          in unlines [
     "#include \"vertex_edges_info.h\"",
-    "uint32_t g_edge_ids[EDGE_IDS_SIZE] = " ++ printEdges (getEdges p) ++ ";",
+    "IdHashPair g_edge_id_hash_pairs[EDGE_IDS_SIZE] = " 
+        ++ (show $ (getEdges p)
+                 & map (\(E e) -> indent 4 (braces ((pretty (drop 1 e)) <> pretty "," <+> (unsafeViaShow (hash32 e)))))
+                 & concatWith (surround (comma <> line))
+                 & \x -> line <> x
+                 & braces 
+                 )  ++ ";",
     printf ("VertexEdgesInfo g_vertex_edges_info[VERTEX_EDGES_INFO_SIZE] = \n" ++ 
-            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") 
+            show (indent 4 $ braces $ map pretty tis & concatWith (surround (line <+> pretty ","))) ++ ";") 
     ]
 
 
