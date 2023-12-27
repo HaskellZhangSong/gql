@@ -32,7 +32,7 @@ hfile graph = let paths = gql2Paths graph
     idHashPair,
     tableInfo,
 
-    "extern uint32_t g_table_info_size;",
+    printf "#define G_TABLE_INFO_SIZE %d"(length tis),
     printf "extern TableInfo g_table_info[%d];" (length tis),
     "#endif"
     ]
@@ -53,11 +53,11 @@ cfile graph = let paths = gql2Paths graph
     printf "#define PATH_CODES_LEN %d" (length paths), 
     printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";",
     "\n",
-    printf ("uint32_t g_table_info_size = %d;") (length tis),
     printf ("TableInfo g_table_info[%d] = \n" ++ 
             show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") (length tis),
     "\n",
-    let pss = (map.map) (unT) paths in show  $ concatWith (surround line) (map (\x -> pretty "//" <+> pretty x) pss)
+    let pss = (map.map) (unT) paths
+        in show $ concatWith (surround line) (map (\x -> pretty "//" <+> braces (sep (map pretty x))) pss)
     ]
 
 main :: IO ()
@@ -71,7 +71,6 @@ main = do
     let graph = case parseGQL str of
                     Left er -> error $ show er
                     Right g -> g
-    putStrLn "// header file"
     writeFile "./path_config.h" (hfile graph)
     writeFile "./path_config.c" (cfile graph)
     let paths = gql2Paths graph

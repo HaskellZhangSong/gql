@@ -13,6 +13,8 @@ import Text.RawString.QQ
 import Prettyprinter
 import Data.Function
 import Data.List
+import qualified Data.Map as M
+
 
 data Table = T_Null
            | T { unT :: String }
@@ -115,7 +117,8 @@ tableInfos (T t, es) = let es' = es ++ replicate (8 - length es) (E "E0")
                               (map (\(E x) -> (IdHashPair (read (drop 1 x) :: CUInt) 
                                           (hash32 x))) es')
 
-pathToTableInfo = map tableInfos . tableEdges
+pathToTableInfo :: Path -> [TableInfo]
+pathToTableInfo = map tableInfos . M.toList . M.fromListWith (++) . tableEdges
 
 numOfEdges :: Path -> Int
 numOfEdges Null = 0
