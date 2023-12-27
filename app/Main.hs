@@ -20,6 +20,7 @@ hfile graph = let paths = gql2Paths graph
                   tis = pathToTableInfo p
                   ws = map (encode index_table) paths
                 in unlines [
+    "#pragma once",
     "#ifndef GQL_ENCODE_H",
     "#define GQL_ENCODE_H",
     "#include <stdint.h>",
@@ -29,13 +30,22 @@ hfile graph = let paths = gql2Paths graph
     "extern uint32_t tableIndexArr[TABLE_INDEX_LEN] ;",
     printf "#define PATH_CODES_LEN %d" (length paths) , 
     "extern uint32_t pathCodes[PATH_CODES_LEN];",
-    idHashPair,
-    tableInfo,
-
-    printf "#define TABLE_INFO_SIZE %d" (length tis),
-    printf "extern TableInfo g_table_info[TABLE_INFO_SIZE];",
     "#endif"
     ]
+
+table_info_hfile :: GQL -> String
+table_info_hfile graph = let p = path graph
+                             tis = pathToTableInfo p
+                        in unlines
+    ["#pragma once",
+     "#ifndef TABLE_INFO_H",
+     "#define TABLE_INFO_H",
+     "#include <stdint.h>",
+     idHashPair,
+     tableInfo,
+     printf "#define TABLE_INFO_SIZE %d" (length tis),
+     printf "extern TableInfo g_table_info[TABLE_INFO_SIZE];",
+     "#endif"]
 
 cfile :: GQL -> String
 cfile graph = let paths = gql2Paths graph
@@ -51,11 +61,20 @@ cfile graph = let paths = gql2Paths graph
     printf "#define TABLE_INDEX_LEN %d" (length index_table),
     "uint32_t tableIndexArr[TABLE_INDEX_LEN] = " ++ printIndexTable index_table ++ ";",
     printf "#define PATH_CODES_LEN %d" (length paths), 
-    printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";",
-    "\n",
-    printf ("TableInfo g_table_info[TABLE_INFO_SIZE] = \n" ++ 
-            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";")
+    printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";"
     ]
+
+table_info_cfile :: GQL -> String
+table_info_cfile graph = let paths = gql2Paths graph
+                             p = path graph
+                             tis = pathToTableInfo p
+                         in unlines [
+    "#include \"table_info.h\"",
+    printf ("TableInfo g_table_info[TABLE_INFO_SIZE] = \n" ++ 
+            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";") 
+    ]
+
+
 
 main :: IO ()
 main = do 
@@ -70,5 +89,7 @@ main = do
                     Right g -> g
     writeFile "./path_config.h" (hfile graph)
     writeFile "./path_config.c" (cfile graph)
+    writeFile "./table_info.h" (table_info_hfile graph)
+    writeFile "./table_info.c" (table_info_cfile graph)
     let paths = gql2Paths graph
     when (length args > 0) $ pPrint $ parseGQL str

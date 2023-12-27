@@ -53,7 +53,7 @@ tableInfo = [r|
 #define MAX_EDGE_SIZE 16
 typedef struct {
     IdHashPair tableIdHashPair;
-    uin32_t edgeCount;
+    uint32_t edgeCount;
     IdHashPair edgeIdHashPairs[MAX_EDGE_SIZE];
 } TableInfo;
 |]
