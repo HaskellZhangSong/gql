@@ -54,7 +54,7 @@ cfile graph = let paths = gql2Paths graph
     printf "uint32_t pathCodes[PATH_CODES_LEN] = " ++ printEncoding ws ++ ";",
     "\n",
     printf ("TableInfo g_table_info[TABLE_INFO_SIZE] = \n" ++ 
-            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";"),
+            show (indent 4 $ braces $ map pretty tis & concatWith (surround (pretty "," <+> line))) ++ ";")
     ]
 
 main :: IO ()
