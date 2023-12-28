@@ -34,7 +34,7 @@ import Text.Parsec
 
 %right '|'
 %right ','
-
+%left '->'
 
 %%
 
