@@ -32,8 +32,8 @@ import Text.Parsec
     '|'         { Tok Bar p }
     ','         { Tok Comma p }
 
-%left '|'
-%left ','
+%right '|'
+%right ','
 
 
 %%
