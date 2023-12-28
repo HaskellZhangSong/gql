@@ -114,7 +114,7 @@ instance Pretty TableInfo where
                                  (pretty t <>
                                   pretty ", " <>
                                   unsafeViaShow ec <>
-                                  pretty ", " <>
+                                  pretty "," <>
                                   line <> (indent 4 $
                                     (braces (map unsafeViaShow es & concatWith (surround (pretty ","))))))
 
