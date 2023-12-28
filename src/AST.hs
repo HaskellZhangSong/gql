@@ -78,12 +78,12 @@ foreign import ccall "XXH32" xxh32 :: CString -> CSize -> CUInt -> IO CUInt
 
 hash32 str = unsafePerformIO $ withCString str (\x -> xxh32 x (genericLength str) 10)
 
-tableEdges :: Path -> [(Table, Edges)]
-tableEdges Null = []
-tableEdges (Node _) = []
-tableEdges (PathOr p1 p2) = tableEdges p1 ++ tableEdges p2
-tableEdges (PathAnd p1 p2) = tableEdges p1 ++ tableEdges p2
-tableEdges (Path t es p) = (t,es) : tableEdges p
+tableAdjacent :: Path -> Edges -> [(Table, Edges)]
+tableAdjacent Null _ = []
+tableAdjacent (Node t) es = [(t,es)]
+tableAdjacent (PathOr p1 p2) es = tableAdjacent p1 (init es) ++ tableAdjacent p2 [last es]
+tableAdjacent (PathAnd p1 p2) es = tableAdjacent p1 (init es) ++ tableAdjacent p2 [last es]
+tableAdjacent (Path t es p) es2 = (t,nub $ es ++ es2) : tableAdjacent p es
 
 data IdHashPair = IdHashPair { 
                     id :: CUInt, 
@@ -117,7 +117,11 @@ tableInfos (T t, es) = TableInfo (IdHashPair (read (drop 1 t) :: CUInt)
                               (map (\(E x) -> (read (drop 1 x) :: CUInt)) es)
 
 pathToTableInfo :: Path -> [TableInfo]
-pathToTableInfo = map tableInfos . M.toList . M.fromListWith (++) . tableEdges
+pathToTableInfo = map tableInfos 
+                    . filter (\(x,y) -> not $ null y) 
+                    . M.toList 
+                    . M.fromListWith (++) 
+                    . \p -> tableAdjacent p []
 
 numOfEdges :: Path -> Int
 numOfEdges Null = 0
