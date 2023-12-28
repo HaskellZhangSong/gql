@@ -84,8 +84,7 @@ hash32 str = unsafePerformIO $ withCString str (\x -> xxh32 x (genericLength str
 
 tableAdjacent :: Path -> Edges -> [(Table, Edges)]
 tableAdjacent Null _ = []
-tableAdjacent (Node t) es = [(t,es)]
-
+tableAdjacent (Node t) [e] = [(t,[e])]
 tableAdjacent (PathOr t@(Node _) p2) (e:es) = tableAdjacent t [e] ++ tableAdjacent p2 es
 tableAdjacent (PathOr Null p2) (e:es) = tableAdjacent p2 es
 tableAdjacent (PathOr a@(PathOr p1 p2) p3) es = error "impossible case, since  is right assoc"
@@ -96,6 +95,7 @@ tableAdjacent (PathOr p1 p2) (e:es) = tableAdjacent p1 [e] ++ tableAdjacent p2 e
 
 tableAdjacent (PathAnd p1 p2) es = tableAdjacent p1 es ++ tableAdjacent p2 es
 tableAdjacent (Path t es p) es2 = (t,nub $ es ++ es2) : tableAdjacent p es
+tableAdjacent p e = error $ show p ++ " " ++ show e
 
 data IdHashPair = IdHashPair { 
                     id :: CUInt, 
