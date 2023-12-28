@@ -74,9 +74,9 @@ data Path = Null
           | Path Table Edges Path
         deriving (Eq, Show)
 
-pathAndSize :: Path -> Int
-pathAndSize (PathAnd p1 p2) = 1 + pathAndSize p2
-pathAndSize _ = 0
+pathOrSize :: Path -> Int
+pathOrSize (PathOr p1 p2) = 1 + pathOrSize p2
+pathOrSize _ = 0
 
 foreign import ccall "XXH32" xxh32 :: CString -> CSize -> CUInt -> IO CUInt
 
@@ -87,16 +87,12 @@ tableAdjacent Null _ = []
 tableAdjacent (Node t) [e] = [(t,[e])]
 tableAdjacent (PathOr t@(Node _) p2) (e:es) = tableAdjacent t [e] ++ tableAdjacent p2 es
 tableAdjacent (PathOr Null p2) (e:es) = tableAdjacent p2 es
-tableAdjacent (PathOr a@(PathOr p1 p2) p3) es = error "impossible case, since  is right assoc"
-tableAdjacent (PathOr a@(PathAnd p1 p2) p3) es = let andSize = pathAndSize a 
-                                                        in tableAdjacent a (take andSize es)
-                                                        ++ tableAdjacent p3 (drop andSize es)
-tableAdjacent (PathOr p1 p2) (e:es) = tableAdjacent p1 [e] ++ tableAdjacent p2 es
+tableAdjacent (PathOr a@(PathOr p1 p2) p3) es = error "impossible case, since | is right assoc"
+tableAdjacent (PathOr a p3) (e:es) = tableAdjacent a [e] ++ tableAdjacent p3 es
 
 tableAdjacent (PathAnd p1 p2) es = tableAdjacent p1 es ++ tableAdjacent p2 es
 tableAdjacent (Path t es p) es2 = (t,nub $ es ++ es2) : tableAdjacent p es
-tableAdjacent p e = error $ show p ++ " " ++ show e
-
+tableAdjacent p e = []
 data IdHashPair = IdHashPair { 
                     id :: CUInt, 
                     hash :: CUInt 
