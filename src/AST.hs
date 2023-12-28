@@ -126,6 +126,7 @@ tableInfos (T t, es) = TableInfo (IdHashPair (read (drop 1 t) :: CUInt)
 
 pathToTableInfo :: Path -> [TableInfo]
 pathToTableInfo = map tableInfos 
+                    . map (\(x,y) -> (x, nub y))
                     . filter (\(x,y) -> not $ null y) 
                     . M.toList 
                     . M.fromListWith (++) 
