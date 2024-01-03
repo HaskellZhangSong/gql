@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE QuasiQuotes #-}
-
+{-# LANGUAGE BangPatterns #-}
 
 module AST where
 import Data.Char
@@ -14,7 +14,6 @@ import Prettyprinter
 import Data.Function
 import Data.List
 import qualified Data.Map as M
-
 
 data Table = T_Null
            | T { unT :: String }
@@ -89,10 +88,25 @@ tableAdjacent (PathOr t@(Node _) p2) (e:es) = tableAdjacent t [e] ++ tableAdjace
 tableAdjacent (PathOr Null p2) (e:es) = tableAdjacent p2 es
 tableAdjacent (PathOr a@(PathOr p1 p2) p3) es = error "impossible case, since | is right assoc"
 tableAdjacent (PathOr a p3) (e:es) = tableAdjacent a [e] ++ tableAdjacent p3 es
-
 tableAdjacent (PathAnd p1 p2) es = tableAdjacent p1 es ++ tableAdjacent p2 es
-tableAdjacent (Path t es p) es2 = (t,nub $ es ++ es2) : tableAdjacent p es
-tableAdjacent p e = []
+tableAdjacent (Path t es Null) es2 = [(t, es2)]
+tableAdjacent (Path t es p) es2 = if isPathOr p 
+                                    then 
+                                        let ps = flattenOrPath p
+                                            ets' = filter (\(e, t) -> t /= Null) (zip es ps)
+                                            (es', por') = unzip ets'
+                                            por = foldr1 PathOr por'
+                                        in (t, nub $ es' ++ es2) : tableAdjacent por es'
+                                    else 
+                                        (t,nub $ es ++ es2) : tableAdjacent p es
+
+isPathOr (PathOr _ _ ) = True
+isPathOr _             = False
+
+flattenOrPath :: Path -> [Path]
+flattenOrPath (PathOr p1 p2) = p1 : flattenOrPath p2
+flattenOrPath x = [x]
+
 data IdHashPair = IdHashPair { 
                     id :: CUInt, 
                     hash :: CUInt 
